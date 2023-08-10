@@ -1,0 +1,71 @@
+{
+  "menu": [
+    {
+      "url": "/",
+      "name": "Dashboard",
+      "icon": "menu-icon tf-icons bx bxs-home-circle",
+      "slug": "dashboard"
+    },
+    {
+      "menuHeader": "User Module"
+    },
+    {
+      "name": "Users",
+      "icon": "menu-icon tf-icons bx bx bxs-user-circle",
+      "slug": "user",
+      "submenu": [
+        {
+          "url": "user/users-list",
+          "name": "User List",
+          "slug": "user-users-list"
+        },
+        {
+          "url": "user/create-new",
+          "name": "Add User",
+          "slug": "user-create-new"
+        }
+      ]
+    },
+
+    {
+      "menuHeader": "Retailer Module"
+    },
+    {
+      "name": "Retailer",
+      "icon": "menu-icon tf-icons bx bxs-group",
+      "slug": "retailer",
+      "submenu": [
+        {
+          "url": "retailer/retailers-list",
+          "name": "Retailer List",
+          "slug": "retailer-retailers-list"
+        },
+        {
+          "url": "retailer/create-new",
+          "name": "Add Retailer",
+          "slug": "retailer-create-new"
+        }
+      ]
+    },
+    {
+      "menuHeader": "Lead Module"
+    },
+    {
+      "name": "Leads",
+      "icon": "menu-icon tf-icons bx bxs-group",
+      "slug": "lead",
+      "submenu": [
+        {
+          "url": "lead/leads-list",
+          "name": "Leads List",
+          "slug": "lead-leads-list"
+        },
+        {
+          "url": "lead/create-new",
+          "name": "Add Lead",
+          "slug": "lead-create-new"
+        }
+      ]
+    }
+  ]
+}
