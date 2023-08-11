@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\leads;
 
 use App\Http\Controllers\Controller;
+use App\Models\Callback;
 use App\Models\Lead;
 use App\Models\LeadConcessionCard;
 use App\Models\LeadIdentificationCardDetail;
@@ -12,6 +13,7 @@ use App\Models\Retailer;
 use App\Models\StreetType;
 use App\Models\UnitType;
 use App\Models\User;
+use Carbon\Carbon;
 use DataTables;
 use Exception;
 use Illuminate\Http\Request;
@@ -36,7 +38,7 @@ class LeadController extends Controller
     public function leadList(Request $request)
     {
         if ($request->ajax()) {
-            $leads = Lead::leftjoin('lead_identification_card_details as identity', 'identity.leadId', '=', 'leads.id')->leftjoin('lead_concession_cards as concession', 'concession.leadId', '=', 'leads.id')->leftjoin('users as c_user', 'c_user.id', '=', 'leads.createdBy')->leftjoin('users as u_user', 'u_user.id', '=', 'leads.updatedBy')->leftjoin('users as at_user', 'at_user.id', '=', 'leads.assignedTo')->leftjoin('users as aby_user', 'aby_user.id', '=', 'leads.assignedBy')->select('leads.id as lead_id', 'leads.firstName as lead_firstName', 'leads.lastName as lead_lastName', 'leads.homePhone as homePhone', 'leads.phyPostcode as postcode', 'c_user.first_name as created_fname', 'c_user.last_name as created_lname', 'leads.leadSource', 'leads.status as lead_status', 'u_user.first_name as modified_fname', 'u_user.last_name as modified_lname', 'at_user.first_name as assignTo_user_fname', 'at_user.last_name as assignTo_user_lname', 'leads.updated_at as modified_date', 'leads.salesType as ac_type')->orderBy('leads.created_at', 'desc')->get();
+            $leads = Lead::leftjoin('lead_identification_card_details as identity', 'identity.leadId', '=', 'leads.id')->leftjoin('lead_concession_cards as concession', 'concession.leadId', '=', 'leads.id')->leftjoin('users as c_user', 'c_user.id', '=', 'leads.createdBy')->leftjoin('users as u_user', 'u_user.id', '=', 'leads.updatedBy')->leftjoin('users as at_user', 'at_user.id', '=', 'leads.assignedTo')->leftjoin('users as aby_user', 'aby_user.id', '=', 'leads.assignedBy')->leftjoin('callbacks', 'callbacks.lead_id', '=', 'leads.id')->select('leads.id as lead_id', 'leads.firstName as lead_firstName', 'leads.lastName as lead_lastName', 'leads.homePhone as homePhone', 'leads.phyPostcode as postcode', 'c_user.first_name as created_fname', 'c_user.last_name as created_lname', 'leads.leadSource', 'leads.status as lead_status', 'u_user.first_name as modified_fname', 'u_user.last_name as modified_lname', 'at_user.first_name as assignTo_user_fname', 'at_user.last_name as assignTo_user_lname', 'leads.updated_at as modified_date', 'leads.salesType as ac_type', 'leads.created_at as lead_created_at', 'leads.broadband as lead_broadband', 'leads.energy as lead_energy', 'leads.gas as lead_gas', 'callbacks.callback_date as callback_dateTime')->orderBy('leads.created_at', 'desc')->get();
 
             return Datatables::of($leads)
                 ->addIndexColumn()
@@ -49,16 +51,41 @@ class LeadController extends Controller
                     return $name;
                 })
                 ->addColumn('created_on', function ($row) {
-                    $created_name = $row->created_fname . ' ' . $row->created_lname;
-                    return $created_name;
+                    // $created_name = $row->created_fname . ' ' . $row->created_lname;
+                    // return $created_name;
+
+                    $created_on = !empty($row->lead_created_at) ? date('d-M-Y h:i A', strtotime($row->lead_created_at)) : '-';
+                    return $created_on;
                 })
                 ->addColumn('callback', function ($row) {
-                    $callback = '-';
+
+                    $callback = !empty($row->callback_dateTime) ? date('d-M-Y h:i A', strtotime($row->callback_dateTime)) : '-';
+                    // return $created_on;
+
+                    // $callback = '-';
+                    // // callback_dateTime
                     return $callback;
                 })
                 ->addColumn('utilities', function ($row) {
-                    $utilities = '-';
-                    return $utilities;
+                    $utilities = [];
+
+                    if ($row->lead_energy == 'Yes') {
+                        $utilities[] = 'Energy';
+                    }
+
+                    if ($row->lead_gas == 'Yes') {
+                        $utilities[] = 'Gas';
+                    }
+
+                    if ($row->lead_broadband == 'Yes') {
+                        $utilities[] = 'Broadband';
+                    }
+
+                    if (empty($utilities)) {
+                        return '-';
+                    } else {
+                        return implode(', ', $utilities);
+                    }
                 })
                 ->addColumn('modified_by', function ($row) {
                     $modified_by = $row->modified_fname . ' ' . $row->modified_lname;
@@ -76,7 +103,7 @@ class LeadController extends Controller
                 })
 
                 ->addColumn('action', function ($row) {
-                    $actionBtn = '<a href="' . route("lead-edit", ['id' => $row->lead_id]) . '" class="edit btn btn-success btn-sm mb-2" title="Edit"><i class="bx bx-edit"></i></a>';
+                    $actionBtn = '<a href="' . route("lead-edit", ['id' => $row->lead_id]) . '" class="edit btn btn-sm mb-2" title="Edit" style="background-color: #28a745 !important;color:#fff;"><i class="bx bx-edit"></i></a>';
                     $actionBtn .= '<a href="javascript:void(0)" class="delete btn btn-danger btn-sm"';
                     $actionBtn .= ' onclick="leadDelete(' . $row->lead_id . ')" title="Delete"><i class="bx bx-trash"></i></a>';
                     return $actionBtn;
@@ -336,4 +363,79 @@ class LeadController extends Controller
             return response()->json(['status' => 'failed', 'msg' => $e->getMessage()]);
         }
     }
+
+    public function leadStatusUpdate(Request $request)
+    {
+        // printData($request->all());
+        // die();
+        try {
+            Lead::find($request->lead_id)->update([
+                'status' => $request->status,
+                'updatedBy' => auth()->user()->id,
+            ]);
+            $this->notes($request, $request->lead_id, auth()->user()->id);
+            if (!empty($request->status == "Callback") && !empty($request->dateTime)) {
+                $originalDate = $request->dateTime;
+                $dateTime = Carbon::parse($originalDate);
+                $formattedDate = $dateTime->format('Y-m-d H:i:s');
+                $leadId = $request->lead_id;
+                $userId = auth()->user()->id;
+
+                Callback::updateOrInsert(
+                    ['lead_id' => $leadId],
+                    [
+                        'callback_date' => $formattedDate,
+                        'notes' => $request->new_notes,
+                        'user_id' => $userId,
+                    ]
+                );
+            }
+            return redirect()->back()->with('success', $request->status . " status successfully updated.");
+
+        } catch (Exception $e) {
+            return redirect()->back()->with('failed', $e->getMessage());
+        }
+    }
+
+    // Callback notes callendar view
+    public function calendarView()
+    {
+        if (auth()->user()->access_type == 1) {
+            $callbackEvents = Callback::all();
+        } else {
+            $callbackEvents = Callback::join('leads', 'leads.id', '=', 'callbacks.lead_id')
+                ->where(['leads.assignedTo' => auth()->user()->id])
+                ->select('callbacks.callback_date', 'callbacks.notes', 'leads.assignedTo')
+                ->get();
+        }
+
+        $events = [];
+        foreach ($callbackEvents as $event) {
+            $callbackDate = new \DateTime($event->callback_date);
+            $now = new \DateTime();
+
+            $color = 'red'; // Default color is red for events older than 3 days
+
+            // Calculate the difference in hours between the callback date and the current date
+            $hoursDifference = $now->diff($callbackDate)->h;
+
+            if ($hoursDifference < 24) {
+                $color = '#28a745'; // Color is green for events less than 24 hours old
+            } elseif ($hoursDifference >= 24 && $hoursDifference < 72) {
+                $color = 'yellow'; // Color is yellow for events between 24 and 72 hours old
+            }
+
+            $events[] = [
+                'title' => $event->notes,
+                'start' => $callbackDate->format('Y-m-d\TH:i:s'),
+                'end' => $callbackDate->add(new \DateInterval('PT1H'))->format('Y-m-d\TH:i:s'),
+                'color' => $color, // Add the color property to the event
+            ];
+        }
+
+        return view('content.calendar.calendar', compact('events'));
+    }
+
+    // Callback notes callendar view
+
 }

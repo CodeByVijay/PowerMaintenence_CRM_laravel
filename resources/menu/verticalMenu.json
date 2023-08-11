@@ -26,7 +26,6 @@
         }
       ]
     },
-
     {
       "menuHeader": "Retailer Module"
     },
@@ -66,6 +65,15 @@
           "slug": "lead-create-new"
         }
       ]
+    },
+    {
+      "menuHeader": "Calendar"
+    },
+    {
+      "name": "Calendar",
+      "icon": "menu-icon tf-icons bx bxs-calendar",
+      "slug": "calendar",
+      "url": "calendar"
     }
   ]
 }

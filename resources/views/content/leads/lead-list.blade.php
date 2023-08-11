@@ -1,9 +1,29 @@
 @extends('layouts/contentNavbarLayout')
 
 @section('title', 'Leads List')
+@push('style')
+    <style>
+        .green-highlight {
+            background-color: #28a745 !important;
+            color: #ffffff !important;
+        }
 
+        .yellow-highlight {
+            background-color: yellow !important;
+        }
+
+        .red-highlight {
+            background-color: red !important;
+            color: #ffffff;
+        }
+
+        ..clickable-row {
+            cursor: pointer !important;
+        }
+    </style>
+@endpush
 @section('content')
-    <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">Leads /</span> Leads List</h4>
+    {{-- <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">Leads /</span> Leads List</h4> --}}
 
     <div class="row">
         <!-- Basic -->
@@ -22,7 +42,7 @@
                         <div class="dropDown mb-3">
                             <div class="row">
                                 <div class="col-md-6">
-                                    <label for="leadAssignUsers" class="form-label">Choose Employee for Assign Lead</label>
+                                    <label for="leadAssignUsers" class="form-label">Assign Lead To Staff</label>
                                     <div class="row">
                                         <div class="col-md-8">
                                             <select id="leadAssignUsers" name="leadAssignUsers" class="select2 form-select">
@@ -46,7 +66,7 @@
                     @endif
 
                     <div class="table-responsive">
-                        <table class="table table-hover table-flush-spacing leadList text-center">
+                        <table class="table table-flush-spacing table-bordered leadList text-center">
                             <thead>
                                 <tr>
                                     <th>
@@ -98,7 +118,22 @@
                         data: 'checkBox',
                         name: 'checkBox',
                         orderable: false,
-                        searchable: false
+                        searchable: false,
+                        createdCell: function(td, cellData, rowData, row, col) {
+                            // Example of highlighting based on lead age
+                            var createdDate = new Date(rowData.created_on);
+                            var now = new Date();
+                            var timeDifference = now - createdDate;
+                            var hoursDifference = Math.floor(timeDifference / (1000 * 60 * 60));
+
+                            if (hoursDifference < 24) {
+                                $(td).addClass('green-highlight');
+                            } else if (hoursDifference >= 24 && hoursDifference < 24 * 3) {
+                                $(td).addClass('yellow-highlight');
+                            } else {
+                                $(td).addClass('red-highlight');
+                            }
+                        }
                     }, {
                         data: 'DT_RowIndex',
                         name: 'DT_RowIndex'
@@ -180,6 +215,29 @@
                         searchable: false
                     }
                 ],
+
+                createdRow: function(row, data, dataIndex) {
+                    var createdDate = new Date(data.lead_created_at);
+                    var now = new Date();
+                    var timeDifference = now - createdDate;
+                    var hoursDifference = Math.floor(timeDifference / (1000 * 60 * 60));
+
+                    if (hoursDifference < 24) {
+                        $(row).addClass('green-highlight');
+                    } else if (hoursDifference >= 24 && hoursDifference < 24 * 3) {
+                        $(row).addClass('yellow-highlight');
+                    } else {
+                        $(row).addClass('red-highlight');
+                    }
+
+                    // Add click event listener to the row for redirection
+                    $(row).on('click', function(e) {
+                        if (!$(e.target).is('input[type="checkbox"]')) {
+                            // Prevent redirection if the clicked element is a checkbox
+                            window.location.href = "/lead/edit" + '/' + data.lead_id;
+                        }
+                    });
+                },
                 success: function(data) {
                     // Data retrieval successful
                     console.log(data, "success"); // Output the retrieved data to the console
@@ -189,6 +247,21 @@
                     console.log(xhr.responseText, "error"); // Output the error message to the console
                 }
             });
+
+            // Add click event listener to table rows
+            // $('.leadList tbody').on('click', 'tr', function() {
+            //     var rowData = table.row(this).data(); // Get data for the clicked row
+            //     if (rowData) {
+            //         var leadId = rowData.lead_id; // Assuming this is the lead ID from your data
+            //         var editUrl = "{{ route('lead-edit', ['id' => ':leadId']) }}";
+            //         editUrl = editUrl.replace(':leadId', leadId);
+
+            //         window.location.href = editUrl; // Redirect to the edit page
+            //     }
+            //     $(this).addClass('clickable-row');
+            // });
+
+
 
         });
 
@@ -237,27 +310,27 @@
                         cancelButtonColor: '#d33',
                         confirmButtonText: 'Yes, assign it!'
                     }).then((result) => {
-                      if (result.isConfirmed) {
-                        $.ajax({
-                            type: "post",
-                            url: "{{ route('lead-assign') }}",
-                            data: {
-                                "lead_ids": allLeads,
-                                'user_id': user_id
-                            },
-                            success: function(response) {
-                                // console.log(response, "res")
-                                Swal.fire(
-                                    'Success!',
-                                    response.msg + " to" + user_name,
-                                    'success'
-                                )
-                                $('#leadAssignUsers').val('').trigger('change');
-                                $("#masterCheckBox").prop('checked', false);
-                                table.ajax.reload(null, false);
-                            }
-                        });
-                      }
+                        if (result.isConfirmed) {
+                            $.ajax({
+                                type: "post",
+                                url: "{{ route('lead-assign') }}",
+                                data: {
+                                    "lead_ids": allLeads,
+                                    'user_id': user_id
+                                },
+                                success: function(response) {
+                                    // console.log(response, "res")
+                                    Swal.fire(
+                                        'Success!',
+                                        response.msg + " to" + user_name,
+                                        'success'
+                                    )
+                                    $('#leadAssignUsers').val('').trigger('change');
+                                    $("#masterCheckBox").prop('checked', false);
+                                    table.ajax.reload(null, false);
+                                }
+                            });
+                        }
                     });
                 }
             })

@@ -35,7 +35,10 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('/my-profile', [ProfileController::class, 'index'])->name('my-profile');
     Route::post('/update-profile', [ProfileController::class, 'updateProfile'])->name('update-profile');
 
-    Route::group(['prefix' => 'user', 'middleware' => 'useraccess'], function () {
+    Route::post('/read-all-notifications', [UsersController::class, 'ReadAllNotification'])->name('read-all-notifications');
+
+    // , 'middleware' => 'useraccess'
+    Route::group(['prefix' => 'user'], function () {
         Route::get('/create-new', [UsersController::class, 'index'])->name('user-create-new');
         Route::post('/create-user', [UsersController::class, 'createUser'])->name('createUser');
         Route::get('/users-list', [UsersController::class, 'users'])->name('user-users-list');
@@ -69,7 +72,10 @@ Route::group(['middleware' => 'auth'], function () {
         Route::get('/edit/{id}', [LeadController::class, 'editForm'])->name('lead-edit');
         // Route::post('/edit', [LeadController::class, 'updatelead'])->name('lead-update');
         Route::post('/assign-lead', [LeadController::class, 'assignLeads'])->name('lead-assign');
+
+        Route::post('/lead-status-update', [LeadController::class, 'leadStatusUpdate'])->name('lead-status-update');
     });
+    Route::get('/calendar',[LeadController::class,'calendarView'])->name('calendar');
 
     Route::get('/logout', function () {
         // Auth::logout();

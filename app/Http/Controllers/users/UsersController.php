@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\users;
 
 use App\Http\Controllers\Controller;
+use App\Models\Notification;
 use App\Models\User;
 use DataTables;
 use Exception;
@@ -133,6 +134,19 @@ class UsersController extends Controller
         } catch (Exception $e) {
             return response()->json(['status' => 'failed', 'msg' => $e->getMessage()]);
         }
+    }
+
+    public function ReadAllNotification(Request $request)
+    {
+        $encodedNotificationIds = $request->input('n_ids');
+        
+        $notificationIds = json_decode($encodedNotificationIds, true);
+        if(!empty($notificationIds)){
+          Notification::whereIn('id', $notificationIds)->update([
+              'read' => 1,
+          ]);
+        }
+        return redirect()->back();
     }
 
 }

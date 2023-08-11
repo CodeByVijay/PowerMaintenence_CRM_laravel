@@ -2,6 +2,25 @@
 
 @section('title', 'Edit Lead')
 
+@push('style')
+    <style>
+        .stButton {
+            background-color: #9403fc;
+            color: #fff;
+            font-weight: 500;
+        }
+
+        .stButton:hover {
+            background-color: #28a745;
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .modal .modal-header .btn-close {
+            margin-top: 0.75rem !important;
+        }
+    </style>
+@endpush
 @section('content')
     <h4 class="fw-bold py-3 mb-4">
         <span class="text-muted fw-light">Leads /</span> Edit Lead
@@ -595,8 +614,14 @@
                             </div>
 
                             <div class="col-md-12 my-3">
-                                <h5>All Notes</h5>
-                                <div class="table-responsive">
+                                <div id="notesTableBtn" style="cursor: pointer !important; user-select: none;">
+                                    <h5>All Notes&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="javascript:void(0)"
+                                            class="btn btn-warning btn-sm notesIcon"
+                                            style="font-weight: 900 !important;"><i class='bx bx-plus'></i></a></span>
+                                    </h5>
+                                </div>
+
+                                <div class="table-responsive" id="notesTable" style="display: none">
                                     <table class="table table-hover table-flush-spacing leadNotes text-center">
                                         <thead>
                                             <tr>
@@ -628,24 +653,138 @@
                         </div>
                         <div class="mt-2">
                             <button type="button" id="saveLeads" class="btn btn-warning me-2">Update Changes</button>
-                            <button type="reset" class="btn btn-outline-secondary">Reset</button>
                         </div>
                     </form>
+
+                    <div class="statusButtons my-5">
+
+                        <button type="button" class="btn mb-3 mx-2 stButton">No Answer</button>
+                        <button type="button" class="btn mb-3 mx-2 stButton">Not Interested</button>
+                        <button type="button" class="btn mb-3 mx-2 stButton">Already On Better Deal</button>
+                        <button type="button" class="btn mb-3 mx-2 stButton">Callback</button>
+                        <button type="button" class="btn mb-3 mx-2 stButton">Incorrect Details</button>
+                        <button type="button" class="btn mb-3 mx-2 stButton">Wrong Number</button>
+
+                    </div>
                 </div>
                 <!-- /Account -->
-
-
 
             </div>
 
         </div>
     </div>
+
+    {{-- Model Component --}}
+    <div class="modal fade" id="statusModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="statusModalLable"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+                        style="position: absolute;right: 40px;box-shadow: none;"></button>
+                </div>
+                <div class="modal-body" id="modalBody">
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" id="saveNotes" class="btn btn-primary">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {{-- Model Component End --}}
 @endsection
 
 
 @push('script')
     <script>
         // $('.leadNotes').DataTable();
+
+        // Notes table hide/show
+        $(document).ready(function() {
+            $('#notesTableBtn').on('click', function() {
+                $('#notesTable').toggle(500);
+                setTimeout(function() {
+                    if ($('#notesTable').is(':visible')) {
+                        $('.notesIcon').html(`<i class='bx bx-minus'></i>`);
+                    } else {
+                        $('.notesIcon').html(`<i class='bx bx-plus'></i>`);
+                    }
+                }, 550)
+            });
+        });
+        // Notes table hide/show end
+
+        // Status Modal Code
+        $(document).ready(function() {
+            $('.stButton').on('click', function() {
+                let title = $(this).html()
+                let lead_id = "{{ $leads->id }}";
+                console.log(lead_id)
+                let modal = $('#statusModal')
+                let form
+                if (title === "Callback") {
+                    form = `<form method="POST" id="statusForm" action="{{ route('lead-status-update') }}">
+                          @csrf
+                          <input type="hidden" name="status" value="${title}">
+                          <input type="hidden" name="lead_id" value="${lead_id}">
+                          <div class="mb-3">
+                            <label for="datetimepick" class="col-form-label">Choose Callback datetime <span class="text-danger">*</span></label>
+                            <input type="datetime-local" name="dateTime" class="form-control dateTime" id="datetimepick">
+                            <span id="datetimeErr"></span>
+                        </div>
+                          <div class="mb-3">
+                              <label for="notes-text" class="col-form-label">Add Note <span class="text-danger">*</span></label>
+                              <textarea class="form-control notes" name="new_notes" id="notes-text"></textarea>
+                              <span id="notesErr"></span>
+                          </div>
+                      </form>`
+                } else {
+                    form = `<form method="POST" id="statusForm" action="{{ route('lead-status-update') }}">
+                          @csrf
+                          <input type="hidden" name="status" value="${title}">
+                          <input type="hidden" name="lead_id" value="${lead_id}">
+                          <div class="mb-3">
+                              <label for="notes-text" class="col-form-label">Add Note <span class="text-danger">*</span></label>
+                              <textarea class="form-control notes" name="new_notes" id="notes-text"></textarea>
+                              <span id="notesErr"></span>
+                          </div>
+                      </form>`
+                }
+
+                $('#statusModalLable').html(title)
+                $('#modalBody').html(form)
+                modal.modal('show')
+            });
+
+            $('#saveNotes').on('click', function(e) {
+                e.preventDefault();
+
+                $('#datetimeErr').html('');
+                $('#notesErr').html('');
+
+                if ($('form .dateTime').val() === "") {
+                    $('#datetimeErr').html(`* Date Time field is required.`).css('color','red');
+                    return false;
+                }
+                if ($('form .notes').val() === "") {
+                    $('#notesErr').html(`* Note field is required.`).css('color','red');
+                    return false;
+                }
+                let btn = $(this)
+                btn.attr("disabled", "disabled")
+                btn.html(`Please wait <i class="fa fa-spinner fa-pulse fa-fw"></i>`)
+                let form = $('#statusForm')
+
+                setTimeout(() => {
+                    form.submit();
+                }, 900);
+
+            })
+        });
+        // Status Modal Code ENd
+
 
         $(function() {
             $("#dateofbirth").datepicker({

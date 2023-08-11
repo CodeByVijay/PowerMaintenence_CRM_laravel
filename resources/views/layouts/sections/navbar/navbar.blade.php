@@ -62,12 +62,14 @@
             ->latest()
             ->take(10)
             ->get();
+        $notificationIds = $notifications->pluck('id')->toArray();
     } else {
         $notifications = Notification::where(['user_id' => auth()->user()->id, 'read' => 0, 'type' => 2])
             ->select('id', 'lead_id', 'notification')
             ->latest()
             ->take(10)
             ->get();
+        $notificationIds = $notifications->pluck('id')->toArray();
     }
 @endphp
 
@@ -86,21 +88,41 @@
 
         <!-- Notifucation -->
         <li class="nav-item navbar-dropdown dropdown-notification dropdown">
-            <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown" title="Notifications">
-                <div class="avatar">
+            <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown"
+                title="Notifications">
+                <div class="avatar @if (count($notifications) > 0) bell-online @endif">
                     {{-- bell-online --}}
-                    <img src="{{ asset('assets/img/bell2.png') }}" alt class="w-px-30 h-auto rounded-circle mt-2">
+                    {{-- <img src="{{ asset('assets/img/bell2.png') }}" alt class="w-px-30 h-auto rounded-circle mt-2" style="
+                    width: 20px !important;
+                    height: 20px !important;
+                    margin-top: 10px !important;
+                "> --}}
+                    <i class='bx bxs-bell bx-sm bx-tada-hover' style="color: #000000;margin-top: 10px !important;"></i>
                 </div>
             </a>
-            <ul class="dropdown-menu dropdown-menu-lg-end" style="width: 400px; max-width: 400px; overflow:hidden">
+            <ul class="dropdown-menu dropdown-menu-lg-end"
+                style="width: 400px;max-width: 400px;overflow-y: auto;max-height: 280px;">
                 <li>
                     <a class="dropdown-item" href="javascript:void(0);">
-                        <div class="text-center">
+                        <div class="@if (count($notifications) > 0) d-flex @else text-center @endif">
                             <div class="flex-grow-1">
                                 <span class="fw-semibold d-block">Notifications</span>
                                 {{-- <small
                                 class="text-muted">{{ auth()->user()->access_type == 1 ? 'Admin' : 'Staff' }}</small> --}}
                             </div>
+                            @if (count($notifications) > 0)
+                                <div>
+                                    <span>
+                                        <form action="{{ route('read-all-notifications') }}" method="post">
+                                            @csrf
+                                            <input type="hidden" name="n_ids"
+                                                value="{{ json_encode($notificationIds) }}">
+                                            <button type="submit" class="btn btn-sm btn-danger">Mark All As
+                                                Read</button>
+                                        </form>
+                                    </span>
+                                </div>
+                            @endif
                         </div>
                     </a>
                 </li>
@@ -112,19 +134,18 @@
                 {{-- {{ printData($notifications->toArray()) }} --}}
 
                 @forelse ($notifications as $notification)
-
-                <li>
-                    <a class="dropdown-item" href="javascript:void(0)">
-                        <i class="bx bx-bell me-2"></i>
-                        <span class="align-middle">{!! $notification->notification !!}</span>
-                    </a>
-                </li>
+                    <li>
+                        <a class="dropdown-item" href="javascript:void(0)">
+                            <i class="bx bx-bell me-2"></i>
+                            <span class="align-middle">{!! $notification->notification !!}</span>
+                        </a>
+                    </li>
                 @empty
-                <li>
-                  <a class="dropdown-item text-center" href="javascript:void(0)">
-                      <span class="align-middle">No notifications found.</span>
-                  </a>
-              </li>
+                    <li>
+                        <a class="dropdown-item text-center" href="javascript:void(0)">
+                            <span class="align-middle">No notifications found.</span>
+                        </a>
+                    </li>
                 @endforelse
                 {{-- Notification List End --}}
             </ul>
@@ -133,11 +154,11 @@
 
 
         <!-- Place this tag where you want the button to render. -->
-        <li class="nav-item lh-1 me-3">
+        {{-- <li class="nav-item lh-1 me-3">
             <a class="github-button" href="javascript:void(0)" data-icon="octicon-star" data-size="large"
                 data-show-count="true"
                 aria-label="Star themeselection/sneat-html-laravel-admin-template-free on GitHub">{{ auth()->user()->first_name . ' ' . (isset(auth()->user()->last_name) ? auth()->user()->last_name : '') }}</a>
-        </li>
+        </li> --}}
 
         <!-- User -->
         <li class="nav-item navbar-dropdown dropdown-user dropdown">

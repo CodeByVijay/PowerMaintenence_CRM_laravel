@@ -59,11 +59,11 @@
 
                 {{-- main menu --}}
 
-                @if (auth()->user()->access_type == 2 && $menu->name == 'Users')
+                {{-- @if (auth()->user()->access_type == 2 && $menu->name == 'Users')
                     @php
                         continue;
                     @endphp
-                @endif
+                @endif --}}
 
                 <li class="menu-item {{ $activeClass }}">
                     <a href="{{ isset($menu->url) ? url($menu->url) : 'javascript:void(0);' }}"

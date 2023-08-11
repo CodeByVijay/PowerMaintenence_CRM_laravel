@@ -59,6 +59,8 @@ class Lead extends Model
         'crmNotify',
         'assigned_at',
         'hasConcession',
+        'created_at',
+        'updated_at'
     ];
 
 

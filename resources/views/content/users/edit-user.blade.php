@@ -3,8 +3,8 @@
 @section('title', 'Edit User')
 
 @section('content')
-    <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light"><a href="{{ route('user-users-list') }}">Users</a> /</span>
-        Edit User</h4>
+    {{-- <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light"><a href="{{ route('user-users-list') }}">Users</a> /</span>
+        Edit User</h4> --}}
     <div class="row">
         <!-- Basic -->
         <div class="col-md-12">

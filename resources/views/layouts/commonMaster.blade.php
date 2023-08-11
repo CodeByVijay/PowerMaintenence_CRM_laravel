@@ -30,7 +30,8 @@
     <link rel="stylesheet" href="{{ asset('assets/plugins/lightbox/css/lightbox.min.css') }}">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.0/themes/base/jquery-ui.css">
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/fixedcolumns/4.3.0/css/fixedColumns.dataTables.min.css">
+    <link rel="stylesheet" type="text/css"
+        href="https://cdn.datatables.net/fixedcolumns/4.3.0/css/fixedColumns.dataTables.min.css">
 
 
     <style>
@@ -48,10 +49,11 @@
         .select2-selection__arrow {
             height: 38px !important;
         }
+
         .select2-container--default .select2-selection--single .select2-selection__rendered {
-    color: #444;
-    line-height: 37px !important;
-}
+            color: #444;
+            line-height: 37px !important;
+        }
     </style>
     @stack('style')
 </head>
